@@ -12,6 +12,8 @@ import reviewRouter from "./routes/reviewRoute.js"
 import attentionRouter from "./routes/attentionRoute.js"
 import uploadRouter from "./routes/upload.js"
 
+import quizRouter from "./routes/quizRoute.js";
+
 dotenv.config()
 
 let port = process.env.PORT
@@ -30,6 +32,7 @@ app.use("/api/ai", aiRouter)
 app.use("/api/review", reviewRouter)
 app.use("/api/attention", attentionRouter)
 app.use("/api/divide", uploadRouter)
+app.use("/api/quiz", quizRouter);
 
 app.get("/" , (req,res)=>{
     res.send("Hello From Server")
