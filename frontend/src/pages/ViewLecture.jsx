@@ -41,7 +41,7 @@ function ViewLecture() {
   const [selectedLecture, setSelectedLecture] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lectures, setLectures] = useState([]);
-
+  
   const [viewMode, setViewMode] = useState("video");
   const [analytics, setAnalytics] = useState(null);
   const [attentionScore, setAttentionScore] = useState(null);
@@ -50,7 +50,8 @@ function ViewLecture() {
   const [userPaused, setUserPaused] = useState(false);
   const [lowCount, setLowCount] = useState(0);
   const [highCount, setHighCount] = useState(0);
-
+  const attentionActiveRef = useRef(false);
+  const [attentionActive, setAttentionActive] = useState(false);
   const mediaRef = useRef(null);
   const webcamRef = useRef(null);
   const watchedSecondsRef = useRef(new Set());
@@ -281,13 +282,16 @@ function ViewLecture() {
 
   // Reset attention tracking when lecture changes
   useEffect(() => {
-    setCalibrating(true);
-    setLowCount(0);
-    setHighCount(0);
-    setAutoPaused(false);
-    setAttentionScore(null);
-    setViewMode("video");
-  }, [selectedLecture]);
+  setCalibrating(true);
+  setLowCount(0);
+  setHighCount(0);
+  setAutoPaused(false);
+  setAttentionScore(null);
+  setViewMode("video");
+
+  attentionActiveRef.current = false;
+  setAttentionActive(false);   // 🔴 webcam OFF
+}, [selectedLecture]);
 
   // Send frame every second
   useEffect(() => {
@@ -469,8 +473,17 @@ function ViewLecture() {
                 src={selectedLecture.videoUrl}
                 controls
                 className="w-full h-full"
-                onPlay={() => setUserPaused(false)}
-                onPause={() => setUserPaused(true)}
+                onPlay={() => {
+                  setUserPaused(false);
+                  attentionActiveRef.current = true;
+                  setAttentionActive(true);   // ✅ mount webcam
+                }}
+
+                onPause={() => {
+                  setUserPaused(true);
+                  attentionActiveRef.current = false;
+                  setAttentionActive(false);  // ❌ unmount webcam
+                }}
                 onEnded={handleLectureEnd}
                 onTimeUpdate={handleTimeUpdate}
                 crossOrigin="anonymous"
@@ -486,7 +499,11 @@ function ViewLecture() {
                     src={selectedLecture.audioUrl}
                     controls
                     className="w-full max-w-md"
-                    onPlay={() => setUserPaused(false)}
+                    onPlay={() => {
+                      setUserPaused(false);
+                      attentionActiveRef.current = false;
+                      setAttentionActive(false);
+                    }}
                     onPause={() => setUserPaused(true)}
                     onEnded={handleLectureEnd}
                   />
@@ -770,13 +787,13 @@ function ViewLecture() {
       </div>
 
       {/* Hidden Webcam */}
-      {viewMode === "video" && (
+      {viewMode === "video" && attentionActive && (
         <Webcam
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/jpeg"
           videoConstraints={{ facingMode: "user" }}
-          className="fixed bottom-4 right-4 w-32 h-24 rounded-lg opacity-50"
+          className="fixed bottom-4 right-4 w-32 h-24 rounded-lg opacity-50 pointer-events-none"
         />
       )}
     </div>
