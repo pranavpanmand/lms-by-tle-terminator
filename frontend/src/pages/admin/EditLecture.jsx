@@ -7,6 +7,7 @@ import { serverUrl } from "../../App";
 import { setLectureData } from "../../redux/lectureSlice";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
+import { CollapsibleVideo } from "./PreviousVideo";
 
 function EditLecture() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ function EditLecture() {
   const { lectureData } = useSelector((state) => state.lecture);
 
   const selectedLecture = lectureData.find((l) => l._id === lectureId);
+  // console.log(selectedLecture)
 
   // --- STATE ---
   const [videoFile, setVideoFile] = useState(null);
@@ -39,8 +41,10 @@ function EditLecture() {
   useEffect(() => {
     axios
       .get(serverUrl + `/api/quiz/${lectureId}`, { withCredentials: true })
-      .then((r) => setQuiz(r.data))
+      .then((r) => {setQuiz(r.data)})
       .catch(() => setQuiz(null));
+
+    // console.log(quiz)
   }, [lectureId]);
 
   // --- UPDATE LECTURE FUNCTION (FIXED) ---
@@ -149,7 +153,9 @@ function EditLecture() {
 
             {!quiz ? (
               <button
-                onClick={() => navigate(`/admin/add-quiz/${lectureId}/${courseId}`)}
+                onClick={() =>
+                  navigate(`/admin/edit-quiz/${lectureId}/${courseId}`)
+                }
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
               >
                 <FaPlus /> Add Quiz
@@ -157,9 +163,8 @@ function EditLecture() {
             ) : (
               <div className="flex gap-2">
                 <button
-                  onClick={() => navigate(`/admin/edit-quiz/${quiz._id}`)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
-                >
+                  onClick={() => navigate(`/admin/edit-quiz/${lectureId}/${courseId}/${quiz._id}`)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition">
                   <FaPen /> Edit Quiz
                 </button>
                 <button

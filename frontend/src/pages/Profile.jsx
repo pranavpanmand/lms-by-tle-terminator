@@ -12,6 +12,17 @@ import {
 function Profile() {
   const { userData } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  // console.log(userData)
+
+  const rankColors = {
+    Novice: "bg-gray-200 text-gray-800",
+    Apprentice: "bg-green-200 text-green-800",
+    Expert: "bg-blue-200 text-blue-800",
+    Master: "bg-purple-200 text-purple-800",
+    Terminator: "bg-red-200 text-red-800",
+    MAXED: "bg-yellow-300 text-yellow-900",
+    Unranked: "bg-slate-200 text-slate-700",
+  };
 
   const renderSocialIcon = (platform, url) => {
     if (!url) return null;
@@ -62,6 +73,12 @@ function Profile() {
           </h2>
           <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold uppercase tracking-wider rounded-full mt-2">
             {userData?.role}
+          </span>
+
+          <span
+            className={`px-3 py-1 text-sm font-bold uppercase tracking-wider rounded-full mt-2
+            ${rankColors[userData?.rank || "Unranked"]}`}>
+            {userData?.rank || "Unranked"}
           </span>
 
           <div className="flex gap-5 mt-5">
@@ -153,6 +170,12 @@ function Profile() {
               {userData?.enrolledCourses?.length || 0}
             </p>
             <p className="text-xs text-gray-400 uppercase font-bold">Courses</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-400">
+              {userData?.xp || 0}
+            </p>
+            <p className="text-sm text-gray-400 uppercase font-bold">XP</p>
           </div>
 
           <button

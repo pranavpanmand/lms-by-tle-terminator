@@ -146,76 +146,26 @@ export const getCourseLecture = async (req, res) => {
 // ✅ FIXED EDIT LECTURE (Handles memory storage buffers)
 export const editLecture = async (req, res) => {
     try {
-        const { lectureId } = req.params;
-        const { isPreviewFree, lectureTitle } = req.body;
-
-        console.log(`📝 Edit Lecture - ID: ${lectureId}`);
-        console.log(`📂 Files received:`, req.files ? Object.keys(req.files) : 'No files');
-        console.log(`📝 Form data:`, { lectureTitle, isPreviewFree });
-
-        const lecture = await Lecture.findById(lectureId);
-        if (!lecture) return res.status(404).json({ message: "Lecture not found" });
-
-        // 1. Handle Video Upload
-        if (req.files && req.files['videoUrl'] && req.files['videoUrl'][0]) {
-            const videoFile = req.files['videoUrl'][0];
-            console.log(`🎬 Processing video file: ${videoFile.originalname}, size: ${videoFile.size} bytes`);
-            
-            const mediaResult = await uploadMediaWithAudio(
-                videoFile.buffer,
-                videoFile.originalname
-            );
-            
-            if (mediaResult) {
-                lecture.videoUrl = mediaResult.videoUrl;
-                lecture.audioUrl = mediaResult.audioUrl || lecture.audioUrl;
-                console.log("✅ Video updated successfully");
-                console.log(`📹 Video URL: ${mediaResult.videoUrl}`);
-                if (mediaResult.audioUrl) {
-                    console.log(`🔊 Audio URL: ${mediaResult.audioUrl}`);
-                }
-            } else {
-                console.log("⚠️ Video upload failed - returning null from Cloudinary");
-            }
+        const {lectureId} = req.params
+        const {isPreviewFree , lectureTitle} = req.body
+        const lecture = await Lecture.findById(lectureId)
+          if(!lecture){
+            return res.status(404).json({message:"Lecture not found"})
         }
+        const mediaResult = await uploadMediaWithAudio(req.file.buffer);
+        // console.log("Media Result:", mediaResult);
 
-        // 2. Handle PDF Notes Upload (FIXED)
-        if (req.files && req.files['notesUrl'] && req.files['notesUrl'][0]) {
-            const notesFile = req.files['notesUrl'][0];
-            console.log(`📄 Processing PDF file: ${notesFile.originalname}, size: ${notesFile.size} bytes`);
-            
-            const notesUrl = await uploadFileToCloudinary(
-                notesFile.buffer,
-                notesFile.originalname
-            );
-            
-            if (notesUrl) {
-                lecture.notesUrl = notesUrl;
-                console.log("✅ Notes updated successfully:", notesUrl);
-            } else {
-                console.log("⚠️ PDF upload failed - returning null from Cloudinary");
-            }
+        if (mediaResult) {
+          lecture.videoUrl = mediaResult.videoUrl;
+          lecture.audioUrl = mediaResult.audioUrl;
         }
-
-        // 3. Update Text Fields
-        if (lectureTitle !== undefined) lecture.lectureTitle = lectureTitle;
-        if (isPreviewFree !== undefined) {
-            // Handle both string and boolean values
-            lecture.isPreviewFree = isPreviewFree === 'true' || isPreviewFree === true;
+        if(lectureTitle){
+            lecture.lectureTitle = lectureTitle
         }
-
-        await lecture.save();
-        console.log("✅ Lecture Saved Successfully");
-        console.log(`📋 Updated lecture:`, {
-            lectureTitle: lecture.lectureTitle,
-            isPreviewFree: lecture.isPreviewFree,
-            videoUrl: lecture.videoUrl ? 'Present' : 'Not present',
-            notesUrl: lecture.notesUrl ? 'Present' : 'Not present'
-        });
-
-        // Populate the lecture with any necessary relations
-        const updatedLecture = await Lecture.findById(lectureId);
-
+        lecture.isPreviewFree = isPreviewFree
+        
+        await lecture.save()
+        
         return res.status(200).json({
             success: true,
             message: "Lecture updated successfully",

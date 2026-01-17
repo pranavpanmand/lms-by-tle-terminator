@@ -5,16 +5,27 @@ import { serverUrl } from "../../App";
 import AddQuiz from "./AddQuiz";
 
 export default function EditQuiz() {
-  const { quizId } = useParams();
+  const { lectureId, quizId } = useParams();
   const [quiz, setQuiz] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Create mode → no quizId
+    if (!quizId) {
+      setLoading(false);
+      return;
+    }
+
     axios
-      .put(serverUrl + "/api/quiz/" + quizId, { withCredentials: true })
-      .then((r) => setQuiz(r.data));
-  }, []);
+      .get(`${serverUrl}/api/quiz/${lectureId}`, { withCredentials: true })
+      .then((res) => setQuiz(res.data))
+      .catch(() => setError("Failed to load quiz"))
+      .finally(() => setLoading(false));
+  }, [quizId]);
 
-  if (!quiz) return null;
+  if (loading) return <p>Loading quiz...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
-  return <AddQuiz editData={quiz} />;
+  return <AddQuiz editData={quiz} lectureId={lectureId} />;
 }

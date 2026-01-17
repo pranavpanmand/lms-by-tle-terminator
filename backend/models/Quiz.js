@@ -42,6 +42,10 @@ const quizSchema = new mongoose.Schema(
       required: true,
       validate: (v) => v.length > 0, 
     },
+    duration: {
+      type: Number,
+      default: 10,
+    },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

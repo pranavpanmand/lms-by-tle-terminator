@@ -153,22 +153,12 @@ function App() {
         />
 
         <Route
-          path="/admin/add-quiz/:lectureId/:courseId"
-          element={
-            userData?.role === "educator" ? (
-              <AddQuiz />
-            ) : (
-              <Navigate to={"/signup"} />
-            )
-          }
-        />
-        <Route
-          path="/admin/edit-quiz/:quizId"
+          path="/admin/edit-quiz/:lectureId/:courseId/:quizId?"
           element={
             userData?.role === "educator" ? (
               <EditQuiz />
             ) : (
-              <Navigate to={"/signup"} />
+              <Navigate to="/signup" />
             )
           }
         />

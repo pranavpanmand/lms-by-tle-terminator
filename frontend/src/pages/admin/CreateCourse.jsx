@@ -32,7 +32,7 @@ const CreateCourse = () => {
         
         <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
             <div className="max-w-xl w-[600px] mx-auto p-6 bg-white shadow-md rounded-md mt-10 relative">
-                <FaArrowLeftLong  className='top-[8%] absolute left-[5%] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/courses")}/>
+                <FaArrowLeftLong  className='top-[8%] absolute left-[5%] w-[22px] h-[22px] cursor-pointer' onClick={()=>navigate("/dashboard")}/>
                 <h2 className="text-2xl font-semibold mb-6 text-center">Create Course</h2>
 
                 <form className="space-y-5" onSubmit={(e)=>e.preventDefault()}>
