@@ -119,7 +119,7 @@ function ViewLecture() {
       .get(`${serverUrl}/api/analytics/lecture/${selectedLecture._id}`, {
         withCredentials: true,
       })
-      .then((res) => setAnalytics(res.data))
+      .then((res) => {setAnalytics(res.data)})
       .catch(() => setAnalytics(null));
   }, [selectedLecture]);
 
@@ -294,23 +294,89 @@ function ViewLecture() {
     }
     setDownloadLoading((prev) => ({ ...prev, [type]: true }));
     try {
-      toast.info(`Preparing ${type}...`);
       let downloadUrl = url;
       if (url.includes("cloudinary.com")) {
         const separator = url.includes("?") ? "&" : "?";
         downloadUrl = `${url}${separator}fl_attachment`;
       }
+      const finalFilename = `${filename ||
+        `${selectedLecture?.lectureTitle}_${type}`}`;
+
+      const response = await fetch(downloadUrl);
+
+      if (!response.ok) throw new Error("Network response was not ok");
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = filename || `${selectedLecture?.lectureTitle}_${type}`;
-      link.target = "_blank";
+      link.href = blobUrl;
+      link.download = finalFilename;
       document.body.appendChild(link);
       link.click();
+
+      // Cleanup
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } 
+    catch (error) {
+      toast.error("Download failed");
+      console.error("Download error:", error);
+    } 
+    finally {
+      setDownloadLoading((prev) => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleNoteDownload = async (url, type, filename) => {
+    if (!url) {
+      toast.error(`No ${type} available`);
+      return;
+    }
+
+    setDownloadLoading((prev) => ({ ...prev, [type]: true }));
+
+    try {
+      toast.info(`Preparing ${type}...`);
+      let downloadUrl = url;
+
+      if (url.includes("cloudinary.com")) {
+        if (url.includes("/upload/")) {
+          const [start, end] = url.split("/upload/");
+          downloadUrl = `${start}/upload/f_pdf,fl_attachment/${end}`;
+        } else {
+          const separator = url.includes("?") ? "&" : "?";
+          downloadUrl = `${url}${separator}f_pdf&fl_attachment`;
+        }
+      }
+
+      let finalFilename =
+        filename || `${selectedLecture?.lectureTitle}_${type}`;
+      if (!finalFilename.toLowerCase().endsWith(".pdf")) {
+        finalFilename += ".pdf";
+      }
+
+      const response = await fetch(downloadUrl);
+
+      if (!response.ok) throw new Error("Network response was not ok");
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = finalFilename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
       toast.success("Download started!");
     } catch (error) {
-      toast.error("Download failed");
+      console.error("Download error:", error);
+      toast.error("Download failed. File might not be accessible.");
     } finally {
       setDownloadLoading((prev) => ({ ...prev, [type]: false }));
     }
@@ -350,7 +416,7 @@ function ViewLecture() {
       <div className="bg-white border-b sticky top-0 z-30 px-6 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/allcourses")}
             className="p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
             <FaArrowLeft />
           </button>
@@ -524,7 +590,7 @@ function ViewLecture() {
               {selectedLecture?.notesUrl && (
                 <button
                   onClick={() =>
-                    handleDownload(selectedLecture.notesUrl, "pdf")
+                    handleNoteDownload(selectedLecture.notesUrl, "pdf",selectedLecture?.lectureTitle+"_Notes.pdf")
                   }
                   disabled={downloadLoading.pdf}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 text-sm font-medium text-gray-700 transition">
@@ -541,7 +607,7 @@ function ViewLecture() {
 
           {/* Analytics Dashboard */}
           {analytics && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Stat Cards */}
               <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-md">
                 <div className="flex items-center gap-3 mb-2 opacity-80">
@@ -563,15 +629,6 @@ function ViewLecture() {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white shadow-md">
-                <div className="flex items-center gap-3 mb-2 opacity-80">
-                  <FaChartLine />{" "}
-                  <span className="text-sm font-medium">Avg. Focus</span>
-                </div>
-                <p className="text-3xl font-bold">
-                  {analytics.avgAttentionScore || 0}%
-                </p>
-              </div>
 
               {/* Graph */}
               {analytics.attentionTimelineAvg && graphData.length > 0 && (

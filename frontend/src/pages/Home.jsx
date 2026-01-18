@@ -94,23 +94,23 @@ function Home() {
       {userData && (
         <section className="relative -mt-24 z-20 px-6">
           <div
-            className="max-w-5xl mx-auto bg-white/80 backdrop-blur-xl
+            className="max-w-5xl mx-auto bg-blue-800 backdrop-blur-xl
             rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row
             items-center justify-between gap-6">
             <div>
-              <p className="uppercase text-xs tracking-widest text-slate-500">
+              <p className="uppercase text-xs tracking-widest text-white/70 mb-2">
                 Your Rank
               </p>
-              <h2 className="text-3xl font-black text-slate-900">
+              <h2 className="text-3xl font-black text-yellow-300">
                 {userData.rank || "Novice"} ·{" "}
-                <span className="text-indigo-600">{userData.xp || 0} XP</span>
+                <span className="text-indigo-200">{userData.xp || 0} XP</span>
               </h2>
             </div>
 
             <div className="w-full md:w-1/2">
               <div className="flex justify-between text-xs font-semibold mb-2">
-                <span>Next: {progress.next}</span>
-                <span>{Math.round(progress.percent)}%</span>
+                <span className="text-gray-300" >Next: {progress.next}</span>
+                <span className="text-gray-100">{Math.round(progress.percent)}%</span>
               </div>
               <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
                 <div
@@ -126,11 +126,11 @@ function Home() {
       {/* ================= LEADERBOARD ================= */}
       <section className="py-24 px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-black text-slate-900">
-            Hall of <span className="text-indigo-600">Fame</span>
+          <h2 className="text-6xl font-black text-slate-900">
+            TERMINATOR'S HALL of <span className="text-indigo-600">FAME</span>
           </h2>
           <p className="text-slate-500 mt-4">
-            Top learners dominating the leaderboard
+            Our Top learners dominating the leaderboard this week.
           </p>
         </div>
 

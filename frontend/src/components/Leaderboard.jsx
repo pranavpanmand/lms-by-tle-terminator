@@ -89,7 +89,7 @@ const Leaderboard = () => {
                   </div>
 
                   <img
-                    src={user.photoUrl || "https://via.placeholder.com/150"}
+                    src={user.photoUrl || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
                     alt={user.name || "Leaderboard User"}
                     className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                   />
