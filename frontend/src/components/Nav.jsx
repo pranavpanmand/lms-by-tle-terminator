@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 import { serverUrl } from "../App";
+import { FaVideo } from "react-icons/fa";
 
 function Nav() {
   const [showHam, setShowHam] = useState(false);
@@ -53,6 +54,18 @@ function Nav() {
 
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-5">
+          
+          {/* === NEW: LIVE CLASSES BUTTON (Desktop) === */}
+          {userData && (
+            <button
+              onClick={() => navigate('/live-schedule')}
+              className="flex items-center gap-2 text-white/90 hover:text-white font-medium transition mr-2"
+            >
+              <FaVideo className="text-red-400" /> Live Classes
+            </button>
+          )}
+          {/* ========================================== */}
+
           {/* Profile */}
           <div className="relative">
             {!userData ? (
@@ -145,6 +158,16 @@ function Nav() {
         />
 
         <div className="h-full flex flex-col items-center justify-center gap-6">
+          
+          {/* === NEW: LIVE CLASSES BUTTON (Mobile) === */}
+          {userData && (
+            <MobileItem 
+              text="🔴 Live Classes" 
+              onClick={() => navigate("/live-schedule")} 
+            />
+          )}
+          {/* ========================================= */}
+
           <MobileItem text="My Profile" onClick={() => navigate("/profile")} />
           <MobileItem
             text="My Courses"

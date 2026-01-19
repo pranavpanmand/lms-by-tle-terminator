@@ -29,6 +29,8 @@ import Career from './pages/Career'
 import EditQuiz from './pages/admin/EditQuiz'
 import StudentDashboard from './pages/StudentDashboard'
 
+import LiveClassDashboard from './pages/LiveClassDashboard';
+
 
 import LiveRoom from './pages/LiveRoom'; 
 
@@ -48,6 +50,10 @@ function App() {
       <ToastContainer />
       <ScrollToTop />
       <Routes>
+        <Route 
+          path="/live-schedule" 
+          element={userData ? <LiveClassDashboard /> : <Navigate to="/login" />} 
+        />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route
@@ -181,6 +187,7 @@ function App() {
         />
         <Route path="/forgotpassword" element={<ForgotPassword />} />
       </Routes>
+      
     </>
   );
 }
