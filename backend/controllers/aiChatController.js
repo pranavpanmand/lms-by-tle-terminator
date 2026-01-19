@@ -1,49 +1,48 @@
-import { isOllamaRunning, askOllama } from "../utils/ollamaClient.js";
-import AICourseChat from "../models/AICourseChat.js";
 import AIEmbedding from "../models/AIEmbedding.js";
+import AICourseChat from "../models/AICourseChat.js";
+import { embedText } from "../utils/embeddings.js";
+import { cosineSimilarity } from "../utils/similarity.js";
+import { askOllama } from "../utils/ollama.js";
 
 export const askCourseAI = async (req, res) => {
   try {
     const { question, courseId } = req.body;
     const userId = req.userId;
 
-    // 1️⃣ Check Ollama ONLY when user asks
-    const ollamaOk = await isOllamaRunning();
+    const qEmbedding = await embedText(question);
 
-    if (!ollamaOk) {
-      return res.json({
-        answer:
-          "🤖 AI is currently unavailable on this server. Please try again later.",
-      });
-    }
-
-    // 2️⃣ Fetch relevant chunks (your existing logic)
-    const chunks = await AIEmbedding.find({ courseId }).limit(5);
-
-    if (!chunks.length) {
+    const docs = await AIEmbedding.find({ courseId });
+    if (!docs.length) {
       return res.json({
         answer: "This course has no notes indexed yet.",
       });
     }
 
-    const context = chunks.map(c => c.chunk).join("\n\n");
+    const ranked = docs
+      .map(d => ({
+        chunk: d.chunk,
+        score: cosineSimilarity(qEmbedding, d.embedding),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    const context = ranked.map(r => r.chunk).join("\n\n");
 
     const prompt = `
 You are a course tutor.
-Use ONLY the context below to answer.
+Answer ONLY from the notes below.
+If not found, say: "Not covered in course notes."
 
-Context:
+NOTES:
 ${context}
 
-Question:
+QUESTION:
 ${question}
 `;
 
-    // 3️⃣ Ask Ollama
     const answer = await askOllama(prompt);
 
-    // 4️⃣ Save chat (per-user memory)
-    await AICourseChat.findOneAndUpdate(
+    const chat = await AICourseChat.findOneAndUpdate(
       { courseId, userId },
       {
         $push: {
@@ -53,17 +52,13 @@ ${question}
           ],
         },
       },
-      { upsert: true }
+      { upsert: true, new: true }
     );
 
-    res.json({ answer });
-
+    res.json({ messages: chat.messages });
   } catch (err) {
-    console.error("AI Chat Error:", err.message);
-
     res.json({
-      answer:
-        "⚠️ AI encountered an issue. Please try again later.",
+      answer: "AI is currently unavailable",
     });
   }
 };

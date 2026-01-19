@@ -1,8 +1,12 @@
+import axios from "axios";
 
-export function embedText(text) {
-  const vector = new Array(384).fill(0);
-  for (let i = 0; i < text.length; i++) {
-    vector[i % 384] += text.charCodeAt(i) / 255;
-  }
-  return vector;
+const OLLAMA_URL = "http://127.0.0.1:11434";
+
+export async function embedText(text) {
+  const res = await axios.post(`${OLLAMA_URL}/api/embeddings`, {
+    model: "nomic-embed-text",
+    prompt: text,
+  });
+
+  return res.data.embedding;
 }

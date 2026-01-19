@@ -1,10 +1,29 @@
 import mongoose from "mongoose";
 
-const AIEmbeddingSchema = new mongoose.Schema({
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
-  lectureId: { type: mongoose.Schema.Types.ObjectId, ref: "Lecture" },
-  chunk: String,
-  embedding: [Number],
-});
+const aiEmbeddingSchema = new mongoose.Schema(
+  {
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+      index: true,
+    },
+    lectureId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lecture",
+      required: true,
+    },
+    chunk: {
+      type: String,
+      required: true,
+    },
+    embedding: {
+      type: [Number],
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
 
-export default mongoose.model("AIEmbedding", AIEmbeddingSchema);
+const AIEmbedding = mongoose.model("AIEmbedding", aiEmbeddingSchema);
+export default AIEmbedding;

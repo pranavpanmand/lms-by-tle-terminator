@@ -1,18 +1,11 @@
 import axios from "axios";
 
-export async function askOllama(context, question) {
-  const res = await axios.post("http://localhost:11434/api/generate", {
+const OLLAMA_URL = "http://127.0.0.1:11434";
+
+export async function askOllama(prompt) {
+  const res = await axios.post(`${OLLAMA_URL}/api/generate`, {
     model: "phi3:mini",
-    prompt: `
-You are a course tutor.
-Use the context below to answer clearly.
-
-Context:
-${context}
-
-Question:
-${question}
-`,
+    prompt,
     stream: false,
   });
 

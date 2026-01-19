@@ -15,7 +15,7 @@ export async function askOllama(prompt) {
   const res = await axios.post(
     `${OLLAMA_URL}/api/generate`,
     {
-      model: "mistral",
+      model: "phi3:mini",
       prompt,
       stream: false,
     },

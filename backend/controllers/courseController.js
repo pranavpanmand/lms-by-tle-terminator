@@ -149,85 +149,86 @@ export const getCourseLecture = async (req, res) => {
 };
 
 export const editLecture = async (req, res) => {
-    try {
-        const { lectureId } = req.params;
-        const { isPreviewFree, lectureTitle, courseId } = req.body;
+  try {
+    const { lectureId } = req.params;
+    const { isPreviewFree, lectureTitle, courseId } = req.body;
 
-        console.log(`📝 Edit Lecture - ID: ${lectureId}`);
-        console.log('📂 Request Body:', req.body);
-        console.log('📂 Request Files:', req.files);
-        console.log('📂 Request File:', req.file);
-
-        const lecture = await Lecture.findById(lectureId);
-        if (!lecture) return res.status(404).json({ message: "Lecture not found" });
-
-        // 1. Handle Video Upload - check multiple possible locations
-        let videoFile = null;
-        if (req.files && req.files['videoUrl']) {
-            videoFile = req.files['videoUrl'][0];
-        } else if (req.file && req.file.fieldname === 'videoUrl') {
-            videoFile = req.file;
-        }
-
-        if (videoFile) {
-            console.log(`🎬 Processing video: ${videoFile.originalname} (${videoFile.size} bytes)`);
-            
-            const mediaResult = await uploadMediaWithAudio(
-                videoFile.buffer,
-                videoFile.originalname
-            );
-            
-            if (mediaResult) {
-                lecture.videoUrl = mediaResult.videoUrl;
-                lecture.audioUrl = mediaResult.audioUrl || lecture.audioUrl;
-                console.log("✅ Video updated");
-            }
-        }
-
-        // 2. Handle PDF Notes Upload
-        let notesFile = null;
-        if (req.files && req.files['notesUrl']) {
-            notesFile = req.files['notesUrl'][0];
-        } else if (req.file && req.file.fieldname === 'notesUrl') {
-            notesFile = req.file;
-        }
-
-        if (notesFile) {
-            console.log(`📄 Processing PDF: ${notesFile.originalname}`);
-            
-            const notesUrl = await uploadFileToCloudinary(
-                notesFile.buffer,
-                notesFile.originalname
-            );
-            
-            if (notesUrl) {
-                lecture.notesUrl = notesUrl;
-                console.log("✅ Notes updated");
-                await indexLectureNotes(lecture._id, courseId);
-            }
-        }
-
-        // Update text fields
-        if (lectureTitle !== undefined) {
-            lecture.lectureTitle = lectureTitle;
-        }
-        
-        if (isPreviewFree !== undefined) {
-            lecture.isPreviewFree = isPreviewFree === 'true' || isPreviewFree === true;
-        }
-
-        await lecture.save();
-        return res.status(200).json({
-            success: true,
-            message: "Lecture updated successfully",
-            lecture: lecture,
-        });
-    } catch (error) {
-        console.error("❌ Edit Lecture Error:", error);
-        return res.status(500).json({ 
-            message: `Failed to edit Lecture: ${error.message}`
-        });
+    const lecture = await Lecture.findById(lectureId);
+    if (!lecture) {
+      return res.status(404).json({ message: "Lecture not found" });
     }
+
+    let notesUpdated = false; // ✅ TRACK THIS
+
+    // 1️⃣ Video upload
+    let videoFile = null;
+    if (req.files?.videoUrl) {
+      videoFile = req.files.videoUrl[0];
+    } else if (req.file?.fieldname === "videoUrl") {
+      videoFile = req.file;
+    }
+
+    if (videoFile) {
+      const mediaResult = await uploadMediaWithAudio(
+        videoFile.buffer,
+        videoFile.originalname
+      );
+
+      if (mediaResult) {
+        lecture.videoUrl = mediaResult.videoUrl;
+        lecture.audioUrl = mediaResult.audioUrl || lecture.audioUrl;
+      }
+    }
+
+    // 2️⃣ PDF notes upload
+    let notesFile = null;
+    if (req.files?.notesUrl) {
+      notesFile = req.files.notesUrl[0];
+    } else if (req.file?.fieldname === "notesUrl") {
+      notesFile = req.file;
+    }
+
+    if (notesFile) {
+      const uploadedNotesUrl = await uploadFileToCloudinary(
+        notesFile.buffer,
+        notesFile.originalname
+      );
+
+      if (uploadedNotesUrl) {
+        lecture.notesUrl = uploadedNotesUrl;
+        notesUpdated = true; // ✅ MARK UPDATED
+      }
+    }
+
+    // 3️⃣ Text fields
+    if (lectureTitle !== undefined) {
+      lecture.lectureTitle = lectureTitle;
+    }
+
+    if (isPreviewFree !== undefined) {
+      lecture.isPreviewFree =
+        isPreviewFree === "true" || isPreviewFree === true;
+    }
+
+    // 4️⃣ SAVE FIRST
+    await lecture.save();
+
+    // 5️⃣ INDEX AFTER SAVE
+    if (notesUpdated) {
+      await indexLectureNotes(lecture._id, courseId);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lecture updated successfully",
+      lecture,
+    });
+  } catch (error) {
+    console.error("❌ Edit Lecture Error:", error);
+    return res.status(500).json({
+      message: `Failed to edit Lecture: ${error.message}`,
+    });
+  }
 };
 
 export const removeLecture = async (req, res) => {
