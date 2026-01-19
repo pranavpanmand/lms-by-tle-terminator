@@ -485,9 +485,9 @@ function AddCourses() {
                     "Cyber Security",
                     "Business",
                     "Marketing",
-                    
-                    "Others", 
-                    "NONE"   
+
+                    "Others",
+                    "NONE",
                   ]}
                 />
                 <CustomSelect
@@ -500,7 +500,7 @@ function AddCourses() {
                     "Intermediate",
                     "Advanced",
                     "All Levels",
-                    "NONE"
+                    "NONE",
                   ]}
                 />
                 <div className="space-y-2">
