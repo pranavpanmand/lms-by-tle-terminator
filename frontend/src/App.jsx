@@ -28,6 +28,7 @@ import SearchWithAi from './pages/SearchWithAi'
 import getAllReviews from './customHooks/getAllReviews'
 import Career from './pages/Career'
 import EditQuiz from './pages/admin/EditQuiz'
+import StudentDashboard from './pages/StudentDashboard'
 
 export const serverUrl = "http://localhost:8000"
 
@@ -158,6 +159,17 @@ function App() {
               <EditQuiz />
             ) : (
               <Navigate to="/signup" />
+            )
+          }
+        />
+
+        <Route
+          path="/studentdashboard"
+          element={
+            userData?.role === "student" ? (
+              <StudentDashboard/>
+            ) : (
+              <Navigate to={"/"} />
             )
           }
         />

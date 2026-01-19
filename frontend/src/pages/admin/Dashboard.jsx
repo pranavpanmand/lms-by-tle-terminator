@@ -21,6 +21,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const { userData } = useSelector((state) => state.user);
   const { creatorCourseData } = useSelector((state) => state.course);
+  console.log(creatorCourseData)
 
   const courseProgressData =
     creatorCourseData?.map((course) => ({

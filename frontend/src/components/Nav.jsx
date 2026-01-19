@@ -109,6 +109,12 @@ function Nav() {
               onClick={() => navigate("/dashboard")}
             />
           )}
+          {userData?.role === "student" && (
+            <GradientButton
+              text="Dashboard"
+              onClick={() => navigate("/studentdashboard")}
+            />
+          )}
 
           {!userData ? (
             <GradientButton text="Login" onClick={() => navigate("/login")} />

@@ -13,7 +13,7 @@ export default function AddQuiz({ editData }) {
 
   const [quizTitle, setQuizTitle] = useState("");
   const [questions, setQuestions] = useState([
-    { questionText: "", options: ["", "", "", ""], correctOption: 0 },
+    { questionText: "", options: ["", "", "", ""], correctOption: 0, explanation: "" },
   ]);
   const [saving, setSaving] = useState(false);
   const [duration, setDuration] = useState(10);
@@ -34,7 +34,7 @@ export default function AddQuiz({ editData }) {
   const addQuestion = () => {
     setQuestions([
       ...questions,
-      { questionText: "", options: ["", "", "", ""], correctOption: 0 },
+      { questionText: "", options: ["", "", "", ""], correctOption: 0, explanation: "" },
     ]);
   };
 
@@ -70,6 +70,7 @@ export default function AddQuiz({ editData }) {
         questionText: q.questionText,
         options: q.options,
         correctOption: q.correctOption,
+        explanation: q.explanation || "",
       }));
 
       if (quizId) {
@@ -236,6 +237,16 @@ export default function AddQuiz({ editData }) {
                     />
                   </div>
                 ))}
+          <input
+            className="border p-2 w-full rounded mt-2"
+            placeholder={`Explanation for Question ${i + 1}`}
+            value={q.explanation}
+            onChange={(e) => {
+              const copy = [...questions];
+              copy[i].explanation = e.target.value;
+              setQuestions(copy);
+            }}
+          />
               </div>
             ))}
           </div>
