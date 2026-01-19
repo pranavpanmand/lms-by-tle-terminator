@@ -87,3 +87,18 @@ export const endLiveLecture = async (req, res) => {
   }
 };
 
+
+export const getAllLectures = async (req, res) => {
+  try {
+    // Fetch all lectures, populate Course and Instructor details
+    const lectures = await LiveLecture.find()
+      .populate('courseId', 'title thumbnail')
+      .populate('instructorId', 'name photoUrl')
+      .sort({ startTime: -1 }); // Newest first
+
+    res.status(200).json({ success: true, lectures });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
