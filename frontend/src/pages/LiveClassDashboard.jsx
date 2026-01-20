@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux"; // Import Redux
+import { useSelector } from "react-redux";
 import { serverUrl } from "../App";
-import { FaVideo, FaPlayCircle, FaCalendarAlt, FaChalkboardTeacher, FaUserTie } from "react-icons/fa";
+import { 
+  FaVideo, 
+  FaPlayCircle, 
+  FaCalendarAlt, 
+  FaChalkboardTeacher, 
+  FaUserTie,
+  FaSync,        // New Icon
+  FaSpinner      // New Icon
+} from "react-icons/fa";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify"; // Import Toast
 
 export default function LiveClassDashboard() {
   const [lectures, setLectures] = useState([]);
   const [tab, setTab] = useState("upcoming"); // 'upcoming' or 'past'
+  const [syncingId, setSyncingId] = useState(null); // Track which ID is syncing
   const navigate = useNavigate();
   
-  // Get User Data to check roles
   const { userData } = useSelector((state) => state.user);
 
   useEffect(() => {
@@ -28,7 +37,32 @@ export default function LiveClassDashboard() {
     fetchLectures();
   }, []);
 
-  // Filter Logic
+  // === NEW: HANDLER TO SYNC RECORDING ===
+  const handleSyncRecording = async (meetingId) => {
+    setSyncingId(meetingId);
+    try {
+        const { data } = await axios.post(`${serverUrl}/api/live/sync`, { meetingId }, { withCredentials: true });
+        
+        if(data.success) {
+            if(data.message.includes("Stream is still processing")) {
+                 toast.info(data.message);
+            } else {
+                 toast.success(data.message);
+                 // Update the local state immediately so button changes to "Watch"
+                 setLectures(prev => prev.map(l => l.meetingId === meetingId ? { ...l, recordingUrl: data.url } : l));
+            }
+        } else {
+            toast.info(data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error(error.response?.data?.message || "Sync Failed. Try again later.");
+    } finally {
+        setSyncingId(null);
+    }
+  };
+  // ======================================
+
   const upcomingLectures = lectures.filter(l => l.isActive === true);
   const pastLectures = lectures.filter(l => l.isActive === false);
 
@@ -78,7 +112,6 @@ export default function LiveClassDashboard() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {(tab === "upcoming" ? upcomingLectures : pastLectures).map((lecture) => {
             
-            // Check if current user is the instructor for this specific lecture
             const isMyLecture = userData?._id === lecture.instructorId?._id;
 
             return (
@@ -88,7 +121,7 @@ export default function LiveClassDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className={`group bg-white rounded-3xl overflow-hidden transition-all duration-300
                   ${isMyLecture 
-                    ? "border-2 border-indigo-500 shadow-xl shadow-indigo-100" // Highlight for Instructor
+                    ? "border-2 border-indigo-500 shadow-xl shadow-indigo-100" 
                     : "border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1"
                   }
                 `}
@@ -101,28 +134,26 @@ export default function LiveClassDashboard() {
                      className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                   />
                   
-                  {/* Instructor Badge */}
                   <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                     <FaUserTie className="text-indigo-600" />
                     {lecture.instructorId?.name || "Instructor"}
                   </div>
 
-                  {/* "MY CLASS" Label for Educators */}
                   {isMyLecture && (
                     <div className="absolute top-4 left-4 bg-indigo-600 text-white text-[10px] font-black tracking-widest px-3 py-1 rounded-full uppercase shadow-lg">
                       My Class
                     </div>
                   )}
                   
-                  {/* ACTION BUTTON (Overlay) */}
+                  {/* JOIN BUTTON (Upcoming Only) */}
                   {tab === "upcoming" && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/20">
                        <button 
                          onClick={() => navigate(`/live/${lecture.meetingId}`)}
                          className={`px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl transform scale-95 group-hover:scale-100 transition-all
                            ${isMyLecture 
-                             ? "bg-red-600 hover:bg-red-700 text-white ring-4 ring-red-600/30" // Red for Teacher
-                             : "bg-white hover:bg-indigo-50 text-slate-900" // White for Student
+                             ? "bg-red-600 hover:bg-red-700 text-white ring-4 ring-red-600/30" 
+                             : "bg-white hover:bg-indigo-50 text-slate-900"
                            }
                          `}
                        >
@@ -146,25 +177,45 @@ export default function LiveClassDashboard() {
 
                   <div className="flex items-center gap-3 text-sm font-medium text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
                      <FaCalendarAlt className="text-indigo-400" />
-                     {/* Using native JS Date to avoid 'date-fns' error */}
                      {new Date(lecture.startTime).toLocaleString([], {
                         weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                      })}
                   </div>
 
+                  {/* RECORDING / SYNC BUTTONS (Past Only) */}
                   {tab === "past" && (
-                    <button 
-                      disabled={!lecture.recordingUrl}
-                      onClick={() => window.open(lecture.recordingUrl, "_blank")}
-                      className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                          lecture.recordingUrl 
-                          ? "bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl" 
-                          : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                      }`}
-                    >
-                       <FaPlayCircle className="text-lg" /> 
-                       {lecture.recordingUrl ? "Watch Recording" : "Processing..."}
-                    </button>
+                    <div className="w-full">
+                        {lecture.recordingUrl ? (
+                            <button 
+                              onClick={() => window.open(lecture.recordingUrl, "_blank")}
+                              className="w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 shadow-lg hover:shadow-xl transition-all"
+                            >
+                               <FaPlayCircle className="text-lg" /> Watch Recording
+                            </button>
+                        ) : (
+                            <div className="flex gap-3">
+                                <div className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-400 font-bold flex items-center justify-center gap-2 text-sm border border-slate-200 cursor-wait">
+                                    Processing...
+                                </div>
+                                
+                                {/* SYNC BUTTON FOR EDUCATORS */}
+                                {userData?.role === 'educator' && (
+                                     <button 
+                                        onClick={() => handleSyncRecording(lecture.meetingId)}
+                                        disabled={syncingId === lecture.meetingId}
+                                        className="w-14 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:border-blue-200 hover:scale-105 transition-all shadow-sm"
+                                        title="Force Sync Recording"
+                                     >
+                                        {syncingId === lecture.meetingId ? (
+                                            <FaSpinner className="animate-spin text-lg" />
+                                        ) : (
+                                            <FaSync className="text-lg" />
+                                        )}
+                                     </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                   )}
                 </div>
               </motion.div>
