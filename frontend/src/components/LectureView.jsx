@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import {
   FaHeadphones,
   FaVideo,
   FaFilePdf,
-  FaPlay,
-  FaPause,
-  FaExclamationTriangle,
   FaSpinner,
   FaBrain,
   FaEye,
@@ -26,6 +23,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import LectureAIWidget from "./LectureAiWidget";
 
 /* -------------------- HELPER: Format Seconds -------------------- */
 const formatTime = (seconds) => {
@@ -268,19 +266,18 @@ function LectureViewForUser({ lecture }) {
       setDownloadLoading((p) => ({ ...p, [type]: false }));
     }
   };
+  console.log(lecture)
 
   /* -------------------- PREPARE GRAPH DATA -------------------- */
-  // Fix for graph not updating: ensure proper parsing and sorting
-  const graphData = React.useMemo(() => {
+  const graphData = useMemo(() => {
     if (!analytics?.attentionTimelineAvg) return [];
 
     return Object.entries(analytics.attentionTimelineAvg)
       .map(([timeStr, value]) => ({
-        time: parseInt(timeStr, 10), // Ensure X-axis is a number
-        // handle cases where value is object {avgScore: 50} or just number 50
+        time: parseInt(timeStr, 10), 
         attention: Math.round(value?.avgScore ?? value ?? 0),
       }))
-      .sort((a, b) => a.time - b.time); // Critical: Sort by time for line chart
+      .sort((a, b) => a.time - b.time); 
   }, [analytics]);
 
   /* -------------------- UI COMPONENTS -------------------- */
@@ -504,6 +501,9 @@ function LectureViewForUser({ lecture }) {
           </div>
         </div>
       )}
+      <div className="lg:col-span-1 h-[600px] lg:h-auto sticky top-24">
+        <LectureAIWidget lectureId={lecture?._id} />
+      </div>
     </div>
   );
 }

@@ -32,9 +32,6 @@ function CourseChat({ courseId, user }) {
     return () => socketRef.current.disconnect();
   }, [courseId]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const sendMessage = () => {
     if (!text.trim()) return;
