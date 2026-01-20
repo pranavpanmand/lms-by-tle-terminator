@@ -319,20 +319,29 @@ export const uploadNotes = async (req, res) => {
     try {
       // Determine resource type based on file extension
       const fileExt = path.extname(req.file.originalname).toLowerCase();
-      let resourceType = 'raw';
-      if (['.jpg', '.jpeg', '.png', '.gif'].includes(fileExt)) {
+      let resourceType = 'raw'; // Default to raw for documents
+      let transformation = [];
+      
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'].includes(fileExt)) {
         resourceType = 'image';
       } else if (['.pdf'].includes(fileExt)) {
-        resourceType = 'image'; // Cloudinary treats PDF as image
+        resourceType = 'raw'; // PDFs should be raw type for proper download
+        transformation = { flags: 'attachment' }; // Force download for PDFs
+      } else if (['.doc', '.docx', '.ppt', '.pptx', '.txt', '.xls', '.xlsx'].includes(fileExt)) {
+        resourceType = 'raw';
+        transformation = { flags: 'attachment' }; // Force download for documents
       }
 
-      // Upload to Cloudinary
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      // Upload to Cloudinary with appropriate settings
+      const uploadOptions = {
         resource_type: resourceType,
         public_id: `notes_${lecture._id}_${Date.now()}`,
         folder: "lms_notes",
-        timeout: 60000
-      });
+        timeout: 60000,
+        ...transformation
+      };
+
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, uploadOptions);
 
       // Update lecture with notes information
       lecture.notes = {
@@ -340,7 +349,8 @@ export const uploadNotes = async (req, res) => {
         name: req.file.originalname,
         size: req.file.size,
         type: req.file.mimetype,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
+        publicId: uploadResult.public_id // Store public_id for deletion
       };
       await lecture.save();
 
@@ -372,6 +382,49 @@ export const uploadNotes = async (req, res) => {
   }
 };
 
+// === DOWNLOAD NOTES FUNCTION ===
+export const downloadNotes = async (req, res) => {
+  try {
+    const { meetingId } = req.params;
+    const lecture = await LiveLecture.findOne({ meetingId });
+
+    if (!lecture || !lecture.notes || !lecture.notes.url) {
+      return res.status(404).json({
+        success: false,
+        message: "Notes not found"
+      });
+    }
+
+    console.log(`[Download Notes] For: ${meetingId}`);
+
+    // Generate Cloudinary URL with download flag
+    if (lecture.notes.url.includes('cloudinary.com') && lecture.notes.publicId) {
+      // Build Cloudinary URL with forced download
+      const publicId = lecture.notes.publicId;
+      const fileExt = path.extname(lecture.notes.name).toLowerCase();
+      
+      // Cloudinary URL for download
+      const downloadUrl = cloudinary.url(publicId, {
+        resource_type: 'raw',
+        flags: 'attachment',
+        attachment: lecture.notes.name || 'lecture_notes'
+      });
+      
+      return res.redirect(downloadUrl);
+    }
+
+    // For non-Cloudinary URLs or fallback
+    res.redirect(lecture.notes.url);
+
+  } catch (error) {
+    console.error(`[Download Notes Error]:`, error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // === DELETE NOTES FUNCTION ===
 export const deleteNotes = async (req, res) => {
   try {
@@ -394,12 +447,22 @@ export const deleteNotes = async (req, res) => {
 
     console.log(`[Delete Notes] Deleting notes for: ${meetingId}`);
 
+    // Delete file from Cloudinary if publicId exists
+    if (lecture.notes.publicId) {
+      try {
+        await cloudinary.uploader.destroy(lecture.notes.publicId, {
+          resource_type: 'raw'
+        });
+        console.log(`[Delete Notes] Cloudinary file deleted: ${lecture.notes.publicId}`);
+      } catch (cloudinaryError) {
+        console.warn(`[Delete Notes] Cloudinary delete failed:`, cloudinaryError.message);
+        // Continue with database deletion even if Cloudinary fails
+      }
+    }
+
     // Clear notes from lecture
     lecture.notes = null;
     await lecture.save();
-
-    // TODO: Optionally delete file from Cloudinary
-    // This would require extracting public_id from the URL
 
     res.status(200).json({
       success: true,

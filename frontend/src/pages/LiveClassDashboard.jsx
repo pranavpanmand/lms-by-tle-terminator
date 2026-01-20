@@ -85,7 +85,9 @@ export default function LiveClassDashboard() {
           'application/vnd.openxmlformats-officedocument.presentationml.presentation',
           'text/plain',
           'image/jpeg',
-          'image/png'
+          'image/png',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         ];
         
         if (!validTypes.includes(file.type)) {
@@ -199,6 +201,30 @@ export default function LiveClassDashboard() {
     }
   };
 
+  const handleDownloadNotes = async (lecture) => {
+    try {
+      // Use the backend download endpoint for proper file download
+      const downloadUrl = `${serverUrl}/api/live/download-notes/${lecture.meetingId}`;
+      
+      // Create a temporary link for download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      
+      // Add authentication headers through URL params or use a different approach
+      // For now, we'll open in a new tab which should handle cookies/auth
+      window.open(downloadUrl, '_blank');
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Download failed. Please try again.');
+      
+      // Fallback to direct URL
+      if (lecture.notes && lecture.notes.url) {
+        window.open(lecture.notes.url, '_blank');
+      }
+    }
+  };
+
   const handleDeleteNotes = async (meetingId) => {
     if (!window.confirm("Are you sure you want to delete the notes?")) return;
 
@@ -231,7 +257,9 @@ export default function LiveClassDashboard() {
     if (['pdf'].includes(ext)) return <FaFileAlt className="text-red-500" />;
     if (['doc', 'docx'].includes(ext)) return <FaFileAlt className="text-blue-500" />;
     if (['ppt', 'pptx'].includes(ext)) return <FaFileAlt className="text-orange-500" />;
+    if (['xls', 'xlsx'].includes(ext)) return <FaFileAlt className="text-green-600" />;
     if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) return <FaFileAlt className="text-green-500" />;
+    if (['txt'].includes(ext)) return <FaFileAlt className="text-gray-500" />;
     return <FaFileAlt />;
   };
 
@@ -395,14 +423,13 @@ export default function LiveClassDashboard() {
                         </p>
                       </div>
                     </div>
-                    <a 
-                      href={selectedLecture.notes.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800"
+                    <button
+                      onClick={() => handleDownloadNotes(selectedLecture)}
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                      title="Download Notes"
                     >
                       <FaDownload />
-                    </a>
+                    </button>
                   </div>
                 </div>
               )}
@@ -430,7 +457,7 @@ export default function LiveClassDashboard() {
                     </p>
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.xls,.xlsx"
                       onChange={(e) => handleFileSelect(e, 'notes')}
                       className="hidden"
                       id="notes-upload"
@@ -442,7 +469,7 @@ export default function LiveClassDashboard() {
                       Choose File
                     </label>
                     <p className="text-xs text-slate-500 mt-2">
-                      PDF, DOC, PPT, TXT, JPG, PNG (Max 50MB)
+                      PDF, DOC, PPT, TXT, JPG, PNG, XLS (Max 50MB)
                     </p>
                   </div>
                 )}
@@ -605,15 +632,13 @@ export default function LiveClassDashboard() {
                           <span className="font-semibold text-green-800">Notes Available</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <a 
-                            href={lecture.notes.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => handleDownloadNotes(lecture)}
                             className="text-green-600 hover:text-green-800 p-1"
                             title="Download Notes"
                           >
                             <FaDownload />
-                          </a>
+                          </button>
                           {isMyLecture && (
                             <>
                               <button

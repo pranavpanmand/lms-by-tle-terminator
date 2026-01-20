@@ -9,7 +9,8 @@ import {
   uploadRecording,
   updateRecording,
   uploadNotes,
-  deleteNotes
+  deleteNotes,
+  downloadNotes  // Added this import
 } from "../controllers/liveController.js";
 import isAuth from "../middlewares/isAuth.js";
 
@@ -30,6 +31,7 @@ const uploadNotesMulter = multer({
   }
 });
 
+// Lecture management routes
 router.post("/create", isAuth, createLiveLecture);
 router.get("/course/:courseId", isAuth, getLectures);
 router.get("/get-token", isAuth, getStreamToken);
@@ -43,5 +45,6 @@ router.post("/update-recording", isAuth, upload.single('video'), updateRecording
 // Notes routes
 router.post("/upload-notes", isAuth, uploadNotesMulter.single('notes'), uploadNotes);
 router.post("/delete-notes", isAuth, deleteNotes);
+router.get("/download-notes/:meetingId", isAuth, downloadNotes); // Added download route
 
 export default router;
