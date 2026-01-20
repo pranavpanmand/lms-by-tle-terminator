@@ -21,6 +21,10 @@ const lectureSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    summary: {
+        type: String,
+        default: ""
+    }
 }, { timestamps: true });
 
 const Lecture = mongoose.model("Lecture", lectureSchema);

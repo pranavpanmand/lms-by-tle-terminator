@@ -1,12 +1,9 @@
-import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import Course from "../models/courseModel.js";
 import User from "../models/userModel.js";
+import { ai } from "../configs/ai.js";
 dotenv.config();
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
 
 
 export const searchWithAi = async (req,res) => {

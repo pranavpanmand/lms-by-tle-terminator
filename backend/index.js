@@ -21,6 +21,7 @@ import aiChatRoute from "./routes/aiChatRoute.js";
 
 
 import liveRouter from "./routes/liveRoutes.js"; 
+import summaryRouter from "./routes/summaryRoute.js"
 
 
 dotenv.config()
@@ -45,6 +46,8 @@ app.use("/api/quiz", quizRouter);
 app.use("/api/chat", chatRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/chatai", aiChatRoute);
+
+app.use("/api/summary", summaryRouter);
 
 
 app.use("/api/live", liveRouter);
