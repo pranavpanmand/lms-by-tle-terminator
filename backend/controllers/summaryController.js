@@ -1,7 +1,11 @@
 import axios from "axios";
 import { ai } from "../configs/ai.js";
 import Lecture from "../models/lectureModel.js";
+import dotenv from "dotenv";
 
+dotenv.config();
+
+const summariseUrl = process.env.SUMMARISE_URL || "";
 
 
 async function getOrGenerateTranscription(lecture) {
@@ -15,7 +19,7 @@ async function getOrGenerateTranscription(lecture) {
   }
 
   const startResp = await axios.get(
-    "https://gouravk001-speechtotext.hf.space/transcribe",
+    `${summariseUrl}/transcribe`,
     { params: { url: audioUrl } },
   );
 
@@ -30,7 +34,7 @@ async function getOrGenerateTranscription(lecture) {
   while (attempt < MAX_ATTEMPTS) {
     attempt++;
     const statusResp = await axios.get(
-      "https://gouravk001-speechtotext.hf.space/status",
+      `${summariseUrl}/status`,
       { params: { job_id: jobId } },
     );
 

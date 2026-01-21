@@ -50,7 +50,6 @@ const LectureAIWidget = ({ lectureId }) => {
       fetchSummary();
     }
   }, [lectureId, activeTab]);
-  // ^ Added lectureId dependency so it triggers on lecture switch
 
   const handleAskDoubt = async (e) => {
     e.preventDefault();
@@ -184,7 +183,7 @@ const LectureAIWidget = ({ lectureId }) => {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ask a doubt..."
-                className="w-full pl-4 pr-12 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm shadow-sm"
+                className="w-full pl-4 pr-12 py-3 rounded-xl text-black border border-gray-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm shadow-sm"
               />
               <button
                 type="submit"
