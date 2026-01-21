@@ -54,6 +54,15 @@ async function getOrGenerateTranscription(lecture) {
     throw new Error("Transcription timed out");
   }
 
+  const prompt = `Summarize the following lecture transcription into a concise summary highlighting, the key points and important concepts in simple easy to understand terms:\n\n${transcriptionResult}\n\nSummary:`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents:prompt,
+    })
+
+  transcriptionResult = response.text;
+
   lecture.summary = transcriptionResult;
   await lecture.save();
 

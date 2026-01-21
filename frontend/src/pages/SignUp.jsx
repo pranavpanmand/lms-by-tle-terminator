@@ -1,11 +1,9 @@
-
-
 import React, { useState } from "react";
 import logo from "../assets/logo.jpg";
 import google from "../assets/google.jpg";
 import axios from "axios";
 import { serverUrl } from "../App";
-import { MdOutlineRemoveRedEye, MdRemoveRedEye } from "react-icons/md";
+import { MdOutlineRemoveRedEye, MdRemoveRedEye, MdClose } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../../utils/Firebase";
@@ -13,7 +11,7 @@ import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaUser,
   FaEnvelope,
@@ -26,12 +24,17 @@ function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState("student"); // Default for manual form
   const navigate = useNavigate();
   let [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // New State for Google Role Modal
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+
   let dispatch = useDispatch();
 
+  // --- Manual Sign Up ---
   const handleSignUp = async () => {
     if (!name || !email || !password) {
       return toast.error("Please fill in all fields");
@@ -55,21 +58,34 @@ function SignUp() {
     }
   };
 
-  const googleSignUp = async () => {
+  // --- Google Sign Up Logic ---
+
+  // 1. Triggered when user clicks the main Google Button
+  const initiateGoogleSignUp = () => {
+    setShowGoogleModal(true);
+  };
+
+  // 2. Triggered when user selects a role in the modal
+  const confirmGoogleSignUp = async (selectedRole) => {
+    setShowGoogleModal(false); // Close modal
+
     try {
+      // Trigger Google Popup
       const response = await signInWithPopup(auth, provider);
       let user = response.user;
       let name = user.displayName;
       let email = user.email;
 
+      // Send the SELECTED role, not the state role (to avoid stale state issues)
       const result = await axios.post(
         serverUrl + "/api/auth/googlesignup",
-        { name, email, role },
+        { name, email, role: selectedRole },
         { withCredentials: true },
       );
+
       dispatch(setUserData(result.data));
       navigate("/");
-      toast.success("Signed in with Google");
+      toast.success(`Welcome, ${selectedRole}! Signed in with Google.`);
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Google Sign-in Failed");
@@ -78,6 +94,72 @@ function SignUp() {
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden">
+      {/* --- GOOGLE ROLE SELECTION MODAL --- */}
+      <AnimatePresence>
+        {showGoogleModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full relative overflow-hidden">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowGoogleModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+                <MdClose size={24} />
+              </button>
+
+              <h3 className="text-2xl font-black text-slate-800 mb-2 text-center">
+                One Last Step
+              </h3>
+              <p className="text-slate-500 text-center text-sm font-medium mb-8">
+                To personalize your experience, please tell us how you will be
+                using the platform.
+              </p>
+
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  onClick={() => confirmGoogleSignUp("student")}
+                  className="group relative flex items-center p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                    <FaUserGraduate size={20} />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-slate-800 group-hover:text-blue-700">
+                      I am a Student
+                    </div>
+                    <div className="text-xs text-slate-400 font-medium">
+                      Looking to learn & grow
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => confirmGoogleSignUp("educator")}
+                  className="group relative flex items-center p-4 rounded-2xl border-2 border-slate-100 hover:border-amber-400 hover:bg-amber-50 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                    <FaChalkboardTeacher size={20} />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-slate-800 group-hover:text-amber-700">
+                      I am an Educator
+                    </div>
+                    <div className="text-xs text-slate-400 font-medium">
+                      Sharing knowledge & courses
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Animated Background Decor */}
       <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-100/50 rounded-full blur-[120px] -z-10 animate-pulse" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-amber-100/40 rounded-full blur-[120px] -z-10" />
@@ -86,8 +168,7 @@ function SignUp() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden border border-white"
-      >
+        className="w-full max-w-6xl bg-white rounded-[2.5rem] shadow-[0_30px_60px_-10px_rgba(0,0,0,0.1)] flex flex-col md:flex-row overflow-hidden border border-white">
         {/* --- LEFT SIDE: FORM --- */}
         <div className="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-center">
           <div className="mb-8">
@@ -95,24 +176,21 @@ function SignUp() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="font-black text-slate-900 text-4xl mb-2 tracking-tight"
-            >
+              className="font-black text-slate-900 text-4xl mb-2 tracking-tight">
               Create Account
             </motion.h1>
             <motion.p
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-slate-500 text-sm font-medium"
-            >
+              className="text-slate-500 text-sm font-medium">
               Join our elite learning community today.
             </motion.p>
           </div>
 
           <form
             className="flex flex-col gap-5"
-            onSubmit={(e) => e.preventDefault()}
-          >
+            onSubmit={(e) => e.preventDefault()}>
             {/* Name Input */}
             <div className="space-y-1.5">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
@@ -163,8 +241,7 @@ function SignUp() {
                 />
                 <div
                   className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-blue-600 transition-colors"
-                  onClick={() => setShow(!show)}
-                >
+                  onClick={() => setShow(!show)}>
                   {show ? (
                     <MdRemoveRedEye size={20} />
                   ) : (
@@ -174,7 +251,7 @@ function SignUp() {
               </div>
             </div>
 
-            {/* Role Selection */}
+            {/* Role Selection (Kept for manual signup) */}
             <div className="space-y-2 mt-1">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
                 I am a
@@ -182,8 +259,7 @@ function SignUp() {
               <div className="grid grid-cols-2 gap-4">
                 <button
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === "student" ? "border-blue-500 bg-blue-50 text-blue-700 shadow-md scale-[1.02]" : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"}`}
-                  onClick={() => setRole("student")}
-                >
+                  onClick={() => setRole("student")}>
                   <FaUserGraduate
                     className={`text-xl mb-1 ${role === "student" ? "text-blue-600" : "text-slate-300"}`}
                   />
@@ -193,8 +269,7 @@ function SignUp() {
                 </button>
                 <button
                   className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-300 ${role === "educator" ? "border-amber-400 bg-amber-50 text-amber-700 shadow-md scale-[1.02]" : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"}`}
-                  onClick={() => setRole("educator")}
-                >
+                  onClick={() => setRole("educator")}>
                   <FaChalkboardTeacher
                     className={`text-xl mb-1 ${role === "educator" ? "text-amber-500" : "text-slate-300"}`}
                   />
@@ -211,8 +286,7 @@ function SignUp() {
               whileTap={{ scale: 0.98 }}
               className="w-full h-12 bg-slate-900 hover:bg-blue-900 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-xl shadow-slate-200 transition-all flex items-center justify-center mt-4"
               disabled={loading}
-              onClick={handleSignUp}
-            >
+              onClick={handleSignUp}>
               {loading ? (
                 <ClipLoader size={20} color="white" />
               ) : (
@@ -229,12 +303,12 @@ function SignUp() {
               <div className="h-[1px] bg-slate-200 flex-1"></div>
             </div>
 
-            {/* Google Button */}
+            {/* Google Button - Updated to trigger Modal */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full h-12 border-2 border-slate-100 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-50 hover:border-slate-200 transition-all"
-              onClick={googleSignUp}
+              onClick={initiateGoogleSignUp} // Changed this from googleSignUp to initiateGoogleSignUp
             >
               <img src={google} alt="Google" className="w-5" />
               <span className="text-sm font-bold text-slate-600">
@@ -246,8 +320,7 @@ function SignUp() {
               Already have an account?{" "}
               <span
                 className="text-blue-600 cursor-pointer hover:text-blue-800 underline decoration-2 underline-offset-2"
-                onClick={() => navigate("/login")}
-              >
+                onClick={() => navigate("/login")}>
                 Log in
               </span>
             </div>
@@ -265,8 +338,7 @@ function SignUp() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-              className="p-1.5 rounded-full border-2 border-white/20 shadow-2xl mb-8"
-            >
+              className="p-1.5 rounded-full border-2 border-white/20 shadow-2xl mb-8">
               <img
                 src={logo}
                 className="w-32 h-32 rounded-full object-cover border-4 border-slate-900"
@@ -278,8 +350,7 @@ function SignUp() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="text-3xl font-black mb-4 tracking-tight"
-            >
+              className="text-3xl font-black mb-4 tracking-tight">
               TLE Terminators
             </motion.h2>
 
@@ -287,8 +358,7 @@ function SignUp() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-blue-100/80 text-center text-sm leading-relaxed max-w-sm font-medium"
-            >
+              className="text-blue-100/80 text-center text-sm leading-relaxed max-w-sm font-medium">
               Unlock your potential with world-class education. Join thousands
               of learners building the future today.
             </motion.p>
