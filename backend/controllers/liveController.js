@@ -253,6 +253,7 @@ export const uploadRecording = async (req, res) => {
 
       console.log(`[Upload Recording] Success! URL: ${lecture.recordingUrl}`);
 
+      // Clean up uploaded file
       fs.unlinkSync(req.file.path);
 
       res.status(200).json({
@@ -262,6 +263,7 @@ export const uploadRecording = async (req, res) => {
       });
 
     } catch (uploadError) {
+      // Clean up uploaded file
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
@@ -378,115 +380,129 @@ export const updateRecording = async (req, res) => {
 export const uploadNotes = async (req, res) => {
   try {
     const { meetingId } = req.body;
-    // Assuming you have middleware that sets req.userId
-    const userId = req.userId;
-
+    const userId = req.userId; // Changed from req.user.id to req.userId
+    
     const lecture = await LiveLecture.findOne({ meetingId });
 
-    // 1. Basic Validation
     if (!lecture) {
-      if (req.file)
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (e) {}
-      return res
-        .status(404)
-        .json({ success: false, message: "Lecture not found" });
-    }
-
-    if (lecture.instructorId.toString() !== userId) {
-      if (req.file)
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (e) {}
-      return res.status(403).json({ success: false, message: "Unauthorized." });
-    }
-
-    if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No file provided" });
-    }
-
-    // 3. PDF Validation (Your new logic is good)
-    const ext = path.extname(req.file.originalname || "").toLowerCase();
-    if (ext !== ".pdf" || req.file.mimetype !== "application/pdf") {
-      try {
+      // Clean up uploaded file
+      if (req.file) {
         fs.unlinkSync(req.file.path);
-      } catch (e) {}
-      return res
-        .status(400)
-        .json({ success: false, message: "Only PDF files are allowed" });
+      }
+      return res.status(404).json({ 
+        success: false, 
+        message: "Lecture not found" 
+      });
+    }
+
+    // Check if user is the instructor
+    if (!isInstructor(lecture, userId)) {
+      // Clean up uploaded file
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(403).json({ 
+        success: false, 
+        message: "Unauthorized. Only instructor can upload notes" 
+      });
+    }
+
+    // Check if notes file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No file provided" 
+      });
     }
 
     console.log(`[Upload Notes] Processing for: ${meetingId}`);
 
     try {
-      // 4. Public Cloudinary Upload (This fixes the 401 error)
+      // Determine resource type based on file extension
+      const fileExt = path.extname(req.file.originalname).toLowerCase();
+      let resourceType = 'raw';
+      if (['.jpg', '.jpeg', '.png', '.gif'].includes(fileExt)) {
+        resourceType = 'image';
+      } else if (['.pdf'].includes(fileExt)) {
+        resourceType = 'image';
+      }
+
+      // Upload to Cloudinary
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "auto",
-        folder: "lms_notes",
-        type: "upload", // Public
-        access_mode: "public", // Public
+        resource_type: resourceType,
         public_id: `notes_${lecture._id}_${Date.now()}`,
-        timeout: 60000,
+        folder: "lms_notes",
+        timeout: 60000
       });
 
+      // Update lecture with notes information
       lecture.notes = {
         url: uploadResult.secure_url,
         name: req.file.originalname,
         size: req.file.size,
-        type: "raw", // We enforced PDF, so 'raw' is safe to assume for consistency
-        uploadedAt: new Date(),
+        type: req.file.mimetype,
+        uploadedAt: new Date()
       };
       await lecture.save();
 
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (e) {}
+      console.log(`[Upload Notes] Success! URL: ${lecture.notes.url}`);
 
-      return res.status(200).json({
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.status(200).json({
         success: true,
         message: "Notes uploaded successfully!",
-        notes: lecture.notes,
+        notes: lecture.notes
       });
+
     } catch (uploadError) {
-      if (req.file)
-        try {
-          fs.unlinkSync(req.file.path);
-        } catch (e) {}
-      console.error("[Upload Notes - Cloudinary Error]:", uploadError);
-      return res.status(500).json({ success: false, message: "Upload failed" });
+      // Clean up uploaded file
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      throw uploadError;
     }
+
   } catch (error) {
-    console.error("[Upload Notes Error]:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error(`[Upload Notes Error]:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 
-// === DOWNLOAD NOTES (Your code here is perfect) ===
+// === DOWNLOAD NOTES FUNCTION ===
+
 export const downloadNotes = async (req, res) => {
   try {
     const { meetingId } = req.params;
     const lecture = await LiveLecture.findOne({ meetingId });
 
-    if (!lecture?.notes?.url) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Notes not found" });
+    if (!lecture || !lecture.notes || !lecture.notes.url) {
+      return res.status(404).json({
+        success: false,
+        message: "Notes not found",
+      });
     }
+
+    console.log(`[Download Notes] Processing for: ${meetingId}`);
 
     const fileUrl = lecture.notes.url;
 
-    // Sanitize Filename
-    let baseName = lecture.notes.name || "Lecture_Notes";
-    baseName = baseName.replace(/[^a-zA-Z0-9-_ ]/g, "").trim();
-    const finalFileName = baseName.toLowerCase().endsWith(".pdf")
-      ? baseName
-      : `${baseName}.pdf`;
+    const response = await axios({
+      method: "GET",
+      url: fileUrl,
+      responseType: "stream",
+    });
 
-    // Stream File
-    const response = await axios.get(fileUrl, { responseType: "stream" });
+    let baseName = lecture.notes.name || "Lecture_Notes";
+
+    baseName = baseName.replace(/[^a-zA-Z0-9-_ ]/g, "").trim();
+
+
+    const finalFileName = `${baseName}.pdf`;
 
     res.setHeader(
       "Content-Disposition",
@@ -495,12 +511,15 @@ export const downloadNotes = async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
 
     response.data.pipe(res);
-  } catch (error) {
-    console.error("[Download Notes Error]:", error.message);
+  } 
+  catch (error) {
+    console.error(`[Download Notes Error]:`, error.message);
+
     if (!res.headersSent) {
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to download notes" });
+      res.status(500).json({
+        success: false,
+        message: "Failed to download notes",
+      });
     }
   }
 };
