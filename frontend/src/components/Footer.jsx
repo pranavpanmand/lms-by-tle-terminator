@@ -149,7 +149,7 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <FooterLink text="STEM Challenges" 
-              onClick={()=>navigate(stem_url)}/>
+              onClick={()=>window.location.href=stem_url}/>
               <FooterLink
                 text="AI Career Path"
                 onClick={() => navigate("/career")}

@@ -347,7 +347,7 @@ function Home() {
               </button>
 
               <button
-                onClick={() => navigate(stem_url)}
+                onClick={() => window.location.href=stem_url}
                 className="px-8 py-4 rounded-2xl bg-yellow-200 text-slate-900 font-bold text-lg hover:bg-blue-50 transition-all flex items-center justify-center gap-2 shadow-xl shadow-white/10 group">
                 <SiViaplay className="text-red-600 group-hover:scale-110 transition-transform" />
                 TryOut STEM Challenges

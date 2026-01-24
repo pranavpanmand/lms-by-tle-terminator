@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, BookOpen, Calculator, Award } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@radix-ui/themes/dist/cjs/index.js";
+import { Button } from "@radix-ui/themes";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
