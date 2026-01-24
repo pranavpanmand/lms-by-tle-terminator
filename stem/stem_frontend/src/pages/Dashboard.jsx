@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@radix-ui/themes";
 import Loader from "../components/Loader";
+import {motion} from 'framer-motion'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const mainUrl = import.meta.env.VITE_MAIN_URL || "http://localhost:5173";
@@ -20,171 +21,220 @@ const API = `${BACKEND_URL}/api`;
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    initializeData();
-  }, []);
+  // useEffect(() => {
+  //   initializeData();
+  // }, []);
 
-  const initializeData = async () => {
-    try {
-      await axios.post(`${API}/init-data`);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error initializing data:", error);
-      setIsLoading(false);
-    }
-  };
+  // const initializeData = async () => {
+  //   try {
+  //     await axios.post(`${API}/init-data`);
+  //     setIsLoading(false);
+  //   } catch (error) {
+  //     console.error("Error initializing data:", error);
+  //     setIsLoading(false);
+  //   }
+  // };
 
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <Loader/>
+  //     </div>
+  //   );
+  // }
+  
   const subjects = [
     {
       id: "math",
       title: "Math Explorer",
-      description: "Practice math problems and master numbers!",
+      description: "Master numbers, patterns, and logic through challenges.",
       icon: Calculator,
-      color: "#6366f1",
-      bgImage:
-        "https://images.unsplash.com/photo-1735116356965-ad5b323d1af8?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwyfHxtYXRoJTIwc3ltYm9scyUyMGNvbG9yZnVsJTIwaWxsdXN0cmF0aW9ufGVufDB8fHx8MTc2OTAxOTE4Mnww&ixlib=rb-4.1.0&q=85",
+      color: "from-indigo-500 to-blue-600",
+      bgImage: "https://images.unsplash.com/photo-1735116356965-ad5b323d1af8",
       path: "/math",
     },
     {
       id: "chemistry",
       title: "Chemistry Lab",
-      description: "Mix, react, and discover amazing experiments!",
+      description: "Experiment, react, and unlock chemical mysteries.",
       icon: FlaskConical,
-      color: "#84cc16",
-      bgImage:
-        "https://images.unsplash.com/photo-1633412748213-0cf8268c357f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxNzV8MHwxfHNlYXJjaHwyfHxjaGVtaXN0cnklMjBiZWFrZXIlMjByZWFjdGlvbiUyMGNhcnRvb258ZW58MHx8fHwxNzY5MDE5MTgzfDA&ixlib=rb-4.1.0&q=85",
+      color: "from-lime-500 to-emerald-600",
+      bgImage: "https://images.unsplash.com/photo-1633412748213-0cf8268c357f",
       path: "/chemistry",
     },
     {
       id: "physics",
-      title: "Physics Lab",
-      description: "Explore forces, motion, and energy!",
+      title: "Physics Arena",
+      description: "Explore motion, energy, and the laws of the universe.",
       icon: Atom,
-      color: "#f97316",
-      bgImage:
-        "https://images.unsplash.com/photo-1675627453075-0f170b02186a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxwaHlzaWNzJTIwYXRvbSUyMG1hZ25ldCUyMGlsbHVzdHJhdGlvbnxlbnwwfHx8fDE3NjkwMTkxODV8MA&ixlib=rb-4.1.0&q=85",
+      color: "from-orange-500 to-amber-600",
+      bgImage: "https://images.unsplash.com/photo-1675627453075-0f170b02186a",
       path: "/physics",
     },
   ];
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader/>
-      </div>
-    );
-  }
+
 
   return (
-    <div className="min-h-screen pb-20" data-testid="dashboard-page">
+    <div className="min-h-screen  bg-[#0b1220] text-slate-100 pb-20" data-testid="dashboard-page">
       {/* Back Button */}
-      <div className="container mx-auto px-6 md:px-12 pt-6">
+      <div className="container mx-auto px-6 md:px-12 pt-6 c">
         <Button
           variant="outline"
-          className="flex items-center gap-2 mb-4"
-          onClick={() => window.location.href = mainUrl}>
+          className="flex items-center gap-2 mb-4 hover:bg-slate-100 text-white hover:text-slate-900 rounded-xl px-4 py-2 font-bold"
+          onClick={() => (window.location.href = mainUrl)}>
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
       </div>
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-transparent to-lime-200 opacity-60"></div>
-        <div className="container mx-auto px-6 md:px-12 pt-6 md:pt-20 pb-16 relative z-10">
-          <div className="max-w-4xl mx-auto text-center animate-in">
-            <h1
-              className="text-5xl md:text-7xl font-black tracking-tight mb-6"
-              data-testid="main-heading">
-              Welcome to <span className="text-gradient">STEM Explorer</span>
-            </h1>
-            <p className="text-lg md:text-xl font-medium leading-relaxed text-slate-600 mb-8">
-              Your digital science playground! Learn math, conduct experiments,
-              and explore the amazing world of science.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button
-                data-testid="ai-tutor-button"
-                onClick={() => navigate("/tutor")}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 rounded-full font-bold shadow-[0_4px_0_0_rgba(79,70,229,1)] active:shadow-none active:translate-y-[4px] transition-all">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Ask AI Tutor
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ================= HERO ================= */}
+      <section className="relative h-[80vh] min-h-[600px] flex items-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1633412748213-0cf8268c357f"
+            alt="STEM Background"
+            className="w-full h-full object-cover"
+          />
 
-      {/* Subjects Grid */}
-      <div className="container mx-auto px-6 md:px-12 mt-8">
-        <h2
-          className="text-4xl md:text-5xl font-bold tracking-tight mb-8 text-center"
-          data-testid="subjects-heading">
-          Choose Your Adventure
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {subjects.map((subject) => {
-            const IconComponent = subject.icon;
-            return (
-              <div
-                key={subject.id}
-                data-testid={`subject-card-${subject.id}`}
-                onClick={() => navigate(subject.path)}
-                className="subject-card group cursor-pointer rounded-3xl overflow-hidden h-80 relative transform transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95"
-                style={{
-                  backgroundImage: `url(${subject.bgImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}>
-                <div className="subject-card-content h-full flex flex-col justify-end p-8 bg-gradient-to-t from-black/50 to-transparent">
-                  <div className="mb-4">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/90 to-blue-900/40" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 text-center">
+          <motion.span
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-block px-4 py-1 mb-6 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-black uppercase tracking-widest backdrop-blur-md">
+            Interactive STEM Platform
+          </motion.span>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black text-white leading-tight mb-6">
+            Explore. Experiment.{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-500">
+              Dominate.
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10">
+            Learn Math, Physics, and Chemistry through challenges, experiments,
+            and AI-powered guidance.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate("/tutor")}
+              className="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold text-lg hover:bg-blue-50 transition-all shadow-xl shadow-white/10">
+              Ask AI Tutor
+            </button>
+
+            <button
+              onClick={() => navigate("/math")}
+              className="px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-lg hover:bg-white/20 transition-all">
+              Start Learning
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="py-24 px-6 bg-gradient-to-r from-blue-200 to-indigo-400">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-black text-center mb-16">
+            Choose Your{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-lime-500">
+              Adventure
+            </span>
+          </motion.h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {subjects.map((subject, i) => {
+              const Icon = subject.icon;
+
+              return (
+                <motion.div
+                  key={subject.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.15 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -10 }}
+                  onClick={() => navigate(subject.path)}
+                  className="group cursor-pointer rounded-[2.5rem] overflow-hidden relative shadow-2xl">
+                  {/* Background */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center scale-105 group-hover:scale-110 transition-transform duration-700"
+                    style={{ backgroundImage: `url(${subject.bgImage})` }}
+                  />
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
+                  {/* Content */}
+                  <div className="relative z-10 p-8 h-full flex flex-col justify-end">
                     <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
-                      style={{ backgroundColor: subject.color }}>
-                      <IconComponent
-                        className="h-8 w-8 text-white"
-                        strokeWidth={2.5}
-                      />
+                      className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subject.color} flex items-center justify-center text-white text-3xl mb-6 shadow-lg`}>
+                      <Icon />
+                    </div>
+
+                    <h3 className="text-3xl font-black text-white mb-2">
+                      {subject.title}
+                    </h3>
+
+                    <p className="text-white/90 mb-6">{subject.description}</p>
+
+                    <div className="flex items-center font-bold text-white">
+                      Start Learning
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-2 transition-transform" />
                     </div>
                   </div>
-                  <h3 className="text-3xl font-bold text-white mb-2">
-                    {subject.title}
-                  </h3>
-                  <p className="text-white/90 font-medium mb-4">
-                    {subject.description}
-                  </p>
-                  <div className="flex items-center text-white font-bold">
-                    Start Learning
-                    <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-2 transition-transform" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="container mx-auto px-6 md:px-12 mt-16">
-        <div className="bg-white rounded-3xl border-2 border-slate-100 shadow-lg p-8 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-black text-primary mb-2">100+</div>
-              <div className="text-slate-600 font-medium">Math Problems</div>
-            </div>
-            <div>
-              <div className="text-4xl font-black text-secondary mb-2">20+</div>
-              <div className="text-slate-600 font-medium">Experiments</div>
-            </div>
-            <div>
-              <div className="text-4xl font-black text-accent mb-2">24/7</div>
-              <div className="text-slate-600 font-medium">AI Tutor Help</div>
-            </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
-      </div>
+      </section>
+      {/* Quick Stats */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto bg-slate-200 rounded-[2.5rem] shadow-xl border border-slate-100 p-10">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            {[
+              { value: "100+", label: "Math Challenges" },
+              { value: "20+", label: "Experiments" },
+              { value: "24/7", label: "AI Tutor" },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.2 }}>
+                <div className="text-4xl font-black text-indigo-600">
+                  {stat.value}
+                </div>
+                <div className="text-slate-500 font-medium">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

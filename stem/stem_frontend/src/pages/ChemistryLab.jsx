@@ -40,69 +40,93 @@ export default function ChemistryLab() {
   }
 
   return (
-    <div className="min-h-screen pb-20" data-testid="chemistry-lab-page">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-lime-50 to-lime-100 border-b-2 border-slate-100">
-        <div className="container mx-auto px-6 md:px-12 py-8">
+    <div
+      className="min-h-screen bg-[#0b1220] text-slate-100 pb-20"
+      data-testid="chemistry-lab-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden border-b border-slate-800">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900 via-green-800/90 to-lime-900/40" />
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+        </div>
+
+        <div className="relative z-10 container mx-auto px-6 md:px-12 py-14">
           <Button
-            data-testid="back-button"
             onClick={() => navigate("/")}
-            className="hover:bg-slate-100 text-slate-600 hover:text-slate-900 rounded-xl px-4 py-2 font-bold mb-4"
             variant="ghost"
-          >
+            className="mb-8 text-slate-300 hover:text-slate-300 p-2 hover:bg-white/10 font-bold rounded-xl">
             <ArrowLeft className="mr-2 h-5 w-5" />
             Back to Home
           </Button>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center shadow-lg">
-              <FlaskConical className="h-8 w-8 text-white" strokeWidth={2.5} />
+
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-600 to-lime-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+              <FlaskConical className="h-9 w-9 text-white" />
             </div>
+
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight" data-testid="page-heading">Chemistry Lab</h1>
-              <p className="text-lg font-medium text-slate-600 mt-1">Mix, react, and discover!</p>
+              <span className="inline-block mb-2 px-3 py-1 rounded-full bg-lime-500/20 border border-lime-400/30 text-lime-300 text-xs font-black uppercase tracking-widest">
+                Chemistry Lab
+              </span>
+
+              <h1 className="text-4xl md:text-5xl font-black text-white">
+                Discover & React
+              </h1>
+
+              <p className="text-lg text-slate-300 mt-2">
+                Mix chemicals, perform experiments, and explore reactions
+                safely.
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 md:px-12 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Experiments Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {experiments.map((experiment) => (
             <div
               key={experiment._id}
               data-testid={`experiment-card-${experiment._id}`}
-              onClick={() => navigate(`/experiment/chemistry/${experiment._id}`)}
-              className="experiment-card bg-white rounded-3xl border-2 border-slate-100 shadow-sm p-6 cursor-pointer active:scale-95"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-lime-100 rounded-xl flex items-center justify-center">
-                  <Beaker className="h-6 w-6 text-secondary" strokeWidth={2.5} />
+              onClick={() =>
+                navigate(`/experiment/chemistry/${experiment._id}`)
+              }
+              className="group cursor-pointer rounded-[2rem] bg-white/5 backdrop-blur-xl border border-white/10 p-6 hover:-translate-y-2 hover:shadow-2xl transition-all">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-12 h-12 rounded-xl bg-lime-500/20 flex items-center justify-center">
+                  <Beaker className="text-lime-400" />
                 </div>
-                <div
+
+                <span
                   className={`px-3 py-1 rounded-full text-xs font-bold ${
                     experiment.difficulty === "easy"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-green-500/20 text-green-300"
                       : experiment.difficulty === "medium"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
+                        ? "bg-yellow-500/20 text-yellow-300"
+                        : "bg-red-500/20 text-red-300"
+                  }`}>
                   {experiment.difficulty}
-                </div>
+                </span>
               </div>
-              <h3 className="text-2xl font-bold mb-2">{experiment.title}</h3>
-              <p className="text-slate-600 font-medium mb-4">{experiment.description}</p>
+
+              <h3 className="text-2xl font-black text-white mb-2">
+                {experiment.title}
+              </h3>
+              <p className="text-slate-400 font-medium mb-4">
+                {experiment.description}
+              </p>
+
               <div className="flex flex-wrap gap-2">
                 {experiment.materials.slice(0, 3).map((material, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-700"
-                  >
+                    className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-slate-300">
                     {material}
                   </span>
                 ))}
                 {experiment.materials.length > 3 && (
-                  <span className="px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-700">
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-medium text-slate-300">
                     +{experiment.materials.length - 3} more
                   </span>
                 )}
