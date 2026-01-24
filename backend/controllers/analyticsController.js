@@ -71,6 +71,7 @@ export const addWatchTime = async (req, res) => {
 export const addAttention = async (req, res) => {
   const { lectureId, t, score } = req.body;
   const userId = req.userId;
+  console.log("📌 ADD ATTENTION HIT", lectureId, t, score);
 
   // save per-user attention
   await LectureSession.findOneAndUpdate(

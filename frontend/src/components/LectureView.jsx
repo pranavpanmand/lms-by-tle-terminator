@@ -159,12 +159,28 @@ function LectureViewForUser({ lecture }) {
       // Filename "capture.jpg" is crucial for backend detection
       form.append("frame", blob, "capture.jpg");
       form.append("lectureId", lecture._id);
-
+      form.append(
+        "t",
+        Math.floor(mediaRef.current.currentTime)
+      );
       const res = await axios.post(`${serverUrl}/api/attention/frame`, form, {
         withCredentials: true,
       });
 
       const temporal = res.data?.temporal;
+          if (temporal?.calibrated) {
+  await axios.post(
+    `${serverUrl}/api/analytics/attention`,
+    {
+      lectureId: lecture._id,
+      t: Math.floor(mediaRef.current.currentTime),
+      score: temporal.attention,
+    },
+    { withCredentials: true }
+  );
+}
+
+
       if (!temporal) return;
 
       if (!temporal.calibrated) {
@@ -226,6 +242,15 @@ function LectureViewForUser({ lecture }) {
       setAutoPaused(true);
     }
   }, [lowCount, viewMode]);
+useEffect(() => {
+  if (analytics) {
+    console.log("📊 ANALYTICS RAW:", analytics);
+    console.log(
+      "📈 TIMELINE:",
+      analytics.attentionTimelineAvg
+    );
+  }
+}, [analytics]);
 
   useEffect(() => {
     if (highCount >= 3 && autoPaused && !userPaused && mediaRef.current) {
@@ -270,15 +295,13 @@ function LectureViewForUser({ lecture }) {
 
   /* -------------------- PREPARE GRAPH DATA -------------------- */
   const graphData = useMemo(() => {
-    if (!analytics?.attentionTimelineAvg) return [];
+    if (!Array.isArray(analytics?.attentionTimelineAvg)) return [];
 
-    return Object.entries(analytics.attentionTimelineAvg)
-      .map(([timeStr, value]) => ({
-        time: parseInt(timeStr, 10), 
-        attention: Math.round(value?.avgScore ?? value ?? 0),
-      }))
-      .sort((a, b) => a.time - b.time); 
-  }, [analytics]);
+    return analytics.attentionTimelineAvg.map(point => ({
+      time: point.t,
+      attention: Math.round(point.avgScore ?? 0),
+    }));
+  }, [analytics?.attentionTimelineAvg]);
 
   /* -------------------- UI COMPONENTS -------------------- */
   const StatusBadge = () => {
@@ -462,8 +485,8 @@ function LectureViewForUser({ lecture }) {
           <h3 className="text-lg font-bold text-gray-800 mb-4">
             Class Attention Timeline
           </h3>
-          <div className="w-full h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={250}>
+
               <AreaChart data={graphData}>
                 <defs>
                   <linearGradient id="colorAtt" x1="0" y1="0" x2="0" y2="1">
@@ -499,7 +522,7 @@ function LectureViewForUser({ lecture }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        
       )}
       <div className="lg:col-span-1 h-[600px] lg:h-auto sticky top-24">
         <LectureAIWidget lectureId={lecture?._id} />
