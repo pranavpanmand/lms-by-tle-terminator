@@ -1,13 +1,12 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css'
 import Dashboard from './pages/Dashboard';
-import MathLearning from './pages/MathLearning';
-import ChemistryLab from './pages/ChemistryLab';
-import PhysicsLab from './pages/PhysicsLab';
 import ExperimentDetail from './pages/ExperimentDetail';
 import AITutor from './pages/AITutor';
 import ProgressTracker from './pages/ProgressTracker';
 import { Toaster } from 'sonner';
+import QuizLearning from './pages/QuizLearning';
+import ExperimentLab from './pages/ExperimentLab';
 
 function App() {
   return (
@@ -15,9 +14,12 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/math" element={<MathLearning />} />
-          <Route path="/chemistry" element={<ChemistryLab />} />
-          <Route path="/physics" element={<PhysicsLab />} />
+          {/* Quiz */}
+          <Route path="/quiz/:subject" element={<QuizLearning />} />
+
+          {/* Labs */}
+          <Route path="/experiment/:subject" element={<ExperimentLab />} />
+
           <Route
             path="/experiment/:subject/:id"
             element={<ExperimentDetail />}
